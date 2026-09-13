@@ -455,6 +455,15 @@ class TestDeployCliCommand(TestCase):
                 express=self.express,
             )
 
+            mock_sync_ecr_stack.assert_called_once_with(
+                self.template_file,
+                "sam-app",
+                "us-east-1",
+                "managed-s3-bucket",
+                self.s3_prefix,
+                None,
+                role_arn=self.role_arn,
+            )
             mock_deploy_context.assert_called_with(
                 template_file=ANY,
                 stack_name="sam-app",
@@ -761,6 +770,9 @@ class TestDeployCliCommand(TestCase):
             output="text",
         )
 
+        self.companion_stack_manager_mock.assert_called_once_with(
+            "sam-app", "us-east-1", "managed-s3-bucket", self.s3_prefix, self.role_arn
+        )
         mock_deploy_context.assert_called_with(
             template_file=ANY,
             stack_name="sam-app",
@@ -1284,6 +1296,15 @@ class TestDeployCliCommand(TestCase):
             output="text",
         )
 
+        mock_sync_ecr_stack.assert_called_once_with(
+            self.template_file,
+            self.stack_name,
+            self.region,
+            self.s3_bucket,
+            self.s3_prefix,
+            None,
+            role_arn=self.role_arn,
+        )
         mock_deploy_context.assert_called_with(
             template_file=ANY,
             stack_name=self.stack_name,

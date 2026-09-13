@@ -55,6 +55,7 @@ class TestCompanionStackManager(TestCase):
         s3_uploader_mock,
         mktempfile_mock,
     ):
+        self.manager._role_arn = "role-arn"
         cfn_waiter = Mock()
         self.cfn_client.get_waiter.return_value = cfn_waiter
 
@@ -65,7 +66,7 @@ class TestCompanionStackManager(TestCase):
         self.companion_stack_builder_mock.return_value.build.assert_called_once()
         s3_uploader_mock.return_value.upload_with_dedup.assert_called_once()
         self.cfn_client.create_stack.assert_called_once_with(
-            StackName=self.companion_stack_name, TemplateURL=ANY, Capabilities=ANY
+            StackName=self.companion_stack_name, TemplateURL=ANY, Capabilities=ANY, RoleARN="role-arn"
         )
         self.cfn_client.get_waiter.assert_called_once_with("stack_create_complete")
         cfn_waiter.wait.assert_called_once_with(StackName=self.companion_stack_name, WaiterConfig=ANY)
@@ -79,6 +80,7 @@ class TestCompanionStackManager(TestCase):
         s3_uploader_mock,
         mktempfile_mock,
     ):
+        self.manager._role_arn = "role-arn"
         cfn_waiter = Mock()
         self.cfn_client.get_waiter.return_value = cfn_waiter
 
@@ -89,7 +91,7 @@ class TestCompanionStackManager(TestCase):
         self.companion_stack_builder_mock.return_value.build.assert_called_once()
         s3_uploader_mock.return_value.upload_with_dedup.assert_called_once()
         self.cfn_client.update_stack.assert_called_once_with(
-            StackName=self.companion_stack_name, TemplateURL=ANY, Capabilities=ANY
+            StackName=self.companion_stack_name, TemplateURL=ANY, Capabilities=ANY, RoleARN="role-arn"
         )
         self.cfn_client.get_waiter.assert_called_once_with("stack_update_complete")
         cfn_waiter.wait.assert_called_once_with(StackName=self.companion_stack_name, WaiterConfig=ANY)
@@ -274,9 +276,11 @@ class TestCompanionStackManager(TestCase):
         stack_provider_mock.get_stacks.return_value = (stacks, None)
         manager_mock.return_value.get_repository_mapping.return_value = {"Function2": "uri2"}
 
-        result = sync_ecr_stack("template.yaml", "stack-name", "region", "s3-bucket", "s3-prefix", image_repositories)
+        result = sync_ecr_stack(
+            "template.yaml", "stack-name", "region", "s3-bucket", "s3-prefix", image_repositories, "role-arn"
+        )
 
-        manager_mock.assert_called_once_with("stack-name", "region", "s3-bucket", "s3-prefix")
+        manager_mock.assert_called_once_with("stack-name", "region", "s3-bucket", "s3-prefix", "role-arn")
         function_provider_mock.assert_called_once_with(stacks, ignore_code_extraction_warnings=True)
         manager_mock.return_value.sync_repos.assert_called_once_with()
 
